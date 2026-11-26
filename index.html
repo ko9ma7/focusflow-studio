@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FocusFlow Studio — 무설치 포모도로 &amp; AI 사운드 집중 스튜디오</title>
+  <meta name="description" content="서버·로그인 없이 브라우저에서 바로 쓰는 포모도로 집중 타이머와 Web Audio API 실시간 백색소음·빗소리 믹서." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-glow" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <div>
+        <h1>FocusFlow Studio</h1>
+        <p class="brand-sub">Zero-Backend · Web Audio API · LocalStorage</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button id="themeToggle" class="icon-btn" type="button" title="라이트/다크 테마 전환" aria-label="테마 전환">
+        🌓 테마
+      </button>
+      <a class="repo-link" href="https://github.com/ko9ma7/focusflow-studio" target="_blank" rel="noopener noreferrer">
+        GitHub 코드 보기 ↗
+      </a>
+    </div>
+  </header>
+
+  <main class="studio-grid">
+    <!-- 좌측: 타이머 카드 -->
+    <section class="card timer-card" aria-label="집중 타이머">
+      <div class="mode-tabs" role="tablist" aria-label="타이머 모드">
+        <button class="mode-tab active" data-mode="focus" role="tab" aria-selected="true">집중 25분</button>
+        <button class="mode-tab" data-mode="short" role="tab" aria-selected="false">짧은 휴식 5분</button>
+        <button class="mode-tab" data-mode="long" role="tab" aria-selected="false">긴 휴식 15분</button>
+      </div>
+
+      <div class="ring-wrap">
+        <svg class="progress-ring" viewBox="0 0 260 260" aria-hidden="true">
+          <circle class="ring-bg" cx="130" cy="130" r="112" />
+          <circle id="ringProgress" class="ring-fg" cx="130" cy="130" r="112" />
+        </svg>
+        <div class="timer-center">
+          <span id="modeBadge" class="mode-badge">DEEP FOCUS</span>
+          <div id="timeDisplay" class="time-display">25:00</div>
+          <p id="activeTaskLabel" class="active-task-label">할 일을 선택하거나 바로 시작하세요</p>
+        </div>
+      </div>
+
+      <div class="timer-controls">
+        <button id="startPauseBtn" class="btn btn-primary" type="button">▶ 집중 시작</button>
+        <button id="resetBtn" class="btn btn-ghost" type="button">↺ 초기화</button>
+      </div>
+
+      <div class="shortcut-hint">
+        <span>단축키: <kbd>Space</kbd> 시작/일시정지</span>
+        <span><kbd>R</kbd> 초기화</span>
+      </div>
+    </section>
+
+    <!-- 우측: 사운드 믹서 & 할 일 & 통계 -->
+    <div class="side-stack">
+      <!-- 앰비언트 사운드 믹서 -->
+      <section class="card sound-card" aria-label="실시간 앰비언트 사운드 믹서">
+        <div class="card-head">
+          <h2>🎧 실시간 사운드 믹서</h2>
+          <span class="pill">MP3 없는 Web Audio 합성</span>
+        </div>
+        <p class="card-desc">외부 음원 파일 없이 브라우저 오디오 엔진으로 빗소리·백색소음·브라운 노이즈를 실시간 합성합니다.</p>
+        <div class="sound-list">
+          <label class="sound-row">
+            <span class="sound-name">🌧️ 빗소리 (Rain)</span>
+            <input type="range" min="0" max="100" value="0" data-sound="rain" class="sound-slider" />
+            <span class="sound-val" data-val="rain">0%</span>
+          </label>
+          <label class="sound-row">
+            <span class="sound-name">🌊 브라운 노이즈 (Deep)</span>
+            <input type="range" min="0" max="100" value="0" data-sound="brown" class="sound-slider" />
+            <span class="sound-val" data-val="brown">0%</span>
+          </label>
+          <label class="sound-row">
+            <span class="sound-name">☕ 백색소음 (White)</span>
+            <input type="range" min="0" max="100" value="0" data-sound="white" class="sound-slider" />
+            <span class="sound-val" data-val="white">0%</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- 오늘의 할 일 -->
+      <section class="card todo-card" aria-label="오늘의 집중 할 일">
+        <div class="card-head">
+          <h2>✅ 오늘의 집중 태스크</h2>
+          <span id="todoCount" class="pill">0 / 0 완료</span>
+        </div>
+        <form id="todoForm" class="todo-form">
+          <input id="todoInput" type="text" placeholder="예: 블로그 초안 작성, 깃허브 배포 확인..." maxlength="60" required />
+          <button class="btn btn-primary btn-sm" type="submit">추가</button>
+        </form>
+        <ul id="todoList" class="todo-list"></ul>
+      </section>
+
+      <!-- 오늘의 집중 통계 -->
+      <section class="card stats-card" aria-label="오늘의 집중 통계">
+        <div class="stat-box">
+          <span class="stat-label">완료 세션</span>
+          <strong id="statSessions" class="stat-value">0회</strong>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">총 집중 시간</span>
+          <strong id="statMinutes" class="stat-value">0분</strong>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">저장 방식</span>
+          <strong class="stat-value">내 브라우저 100%</strong>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>Built with Vibe Coding · Hosted on GitHub Pages · No Server, No Tracking</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
